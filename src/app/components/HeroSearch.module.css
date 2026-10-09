@@ -1,0 +1,45 @@
+.toggle {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper-deep);
+  color: var(--ink);
+  font-size: 13px;
+  text-align: left;
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.toggle[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
+}
+
+.options {
+  display: none;
+}
+
+.expanded {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 768px) {
+  .toggle {
+    display: none;
+  }
+
+  .options,
+  .expanded {
+    display: contents;
+  }
+}

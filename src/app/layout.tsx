@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Manrope } from "next/font/google";
+import { Inter } from "next/font/google";
+import VisualEffects from "./components/VisualEffects";
 import "./globals.css";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const inter = Inter({
   subsets: ["latin"],
+  variable: "--font-inter",
   display: "swap",
 });
 
@@ -17,9 +18,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${manrope.variable} h-full scroll-smooth antialiased`}
+      data-scroll-behavior="smooth"
+      className={`${inter.variable} antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>
+        <a href="#contenido" className="skip-link">Ir al contenido</a>
+        <VisualEffects />
+        {children}
+      </body>
     </html>
   );
 }

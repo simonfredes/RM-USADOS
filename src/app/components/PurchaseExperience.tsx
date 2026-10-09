@@ -1,9 +1,16 @@
+import Arrow from "./Arrow";
+
 const steps = [
-  { number: "01", title: "Selección", text: "Analizamos cada unidad antes de incorporarla a nuestro stock." },
-  { number: "02", title: "Información clara", text: "Te contamos el estado y los datos del vehículo de forma directa." },
-  { number: "03", title: "Acompañamiento", text: "Coordinamos la visita, la documentación y cada paso de la operación." },
+  { number: "01", title: "Elegí tu auto", text: "Explorá las unidades y contanos qué estás buscando. Te ayudamos a conocer las opciones." },
+  { number: "02", title: "Conocé cada detalle", text: "Coordinamos una visita y te damos la información que necesitás para decidir." },
+  { number: "03", title: "Te acompañamos", text: "Estamos con vos durante la documentación y cada paso de la operación." },
 ];
 
 export default function PurchaseExperience() {
-  return <section className="bg-[#dfe0da] px-5 py-20 text-[#11120f] sm:px-8 sm:py-28 lg:px-12"><div className="mx-auto max-w-[1440px]"><div className="grid gap-8 lg:grid-cols-2"><p className="text-xs font-bold uppercase tracking-[.22em] text-black/45">Una experiencia a la altura</p><h2 className="text-4xl font-semibold leading-[1.04] tracking-[-.045em] sm:text-5xl">Atención cercana, criterios exigentes y tiempo para decidir.</h2></div><div className="mt-14 grid border-t border-black/20 md:grid-cols-3">{steps.map((step) => <article key={step.number} className="border-b border-black/20 py-8 md:border-b-0 md:border-r md:px-8 md:first:pl-0 md:last:border-r-0"><span className="text-xs font-bold text-black/35">{step.number}</span><h3 className="mt-8 text-2xl font-semibold">{step.title}</h3><p className="mt-3 max-w-sm leading-7 text-black/55">{step.text}</p></article>)}</div></div></section>;
+  return (
+    <section className="experience section-space" aria-labelledby="experience-title"><div className="container">
+      <div className="section-heading reveal"><div><p className="eyebrow section-eyebrow">Cómo trabajamos</p><h2 id="experience-title" className="section-title">Una compra simple, de principio a fin.</h2></div></div>
+      <div className="experience-steps">{steps.map((step) => <article key={step.number} className="experience-step reveal"><div className="step-top"><span>{step.number}</span><Arrow diagonal /></div><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+    </div></section>
+  );
 }
