@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Arrow from "./Arrow";
 
 const steps = [
@@ -10,7 +11,7 @@ export default function PurchaseExperience() {
   return (
     <section className="experience section-space" aria-labelledby="experience-title"><div className="container">
       <div className="section-heading reveal"><div><p className="eyebrow section-eyebrow">Cómo trabajamos</p><h2 id="experience-title" className="section-title">Una compra simple, de principio a fin.</h2></div></div>
-      <div className="experience-steps">{steps.map((step) => <article key={step.number} className="experience-step reveal"><div className="step-top"><span>{step.number}</span><Arrow diagonal /></div><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
+      <div className="experience-steps">{steps.map((step, index) => <article key={step.number} className="experience-step reveal" style={{ "--reveal-index": index } as CSSProperties}><div className="step-top"><span>{step.number}</span><Arrow diagonal /></div><h3>{step.title}</h3><p>{step.text}</p></article>)}</div>
     </div></section>
   );
 }

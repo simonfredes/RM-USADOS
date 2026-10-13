@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import VisualEffects from "./components/VisualEffects";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -10,8 +11,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "RM Usados | Usados seleccionados",
-  description: "Vehículos usados seleccionados y atención personalizada en Salta.",
+  metadataBase: new URL(SITE_URL),
+  title: { default: "RM Usados | Autos usados seleccionados en Bahía Blanca", template: "%s | RM Usados" },
+  description: "Autos usados seleccionados, principalmente BMW, con atención personalizada en Bahía Blanca.",
+  alternates: { canonical: "/" },
+  openGraph: { siteName: "RM Usados", locale: "es_AR", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

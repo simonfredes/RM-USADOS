@@ -2,12 +2,12 @@ import { getImageProps } from "next/image";
 import Link from "next/link";
 import type { HeroData } from "../actions";
 import type { Vehicle } from "../vehiculos/actions";
-import { VEHICLE_BRANDS } from "@/lib/vehicles/brands";
+import { VEHICLE_BRANDS, sortBrands } from "@/lib/vehicles/brands";
 import Arrow from "./Arrow";
 import HeroSearch from "./HeroSearch";
 
 export default function Hero({ content, vehicles }: { content: HeroData; vehicles: Vehicle[] }) {
-  const brands = [...new Set([...VEHICLE_BRANDS, ...vehicles.map((vehicle) => vehicle.brand)])].sort((a, b) => a.localeCompare(b, "es"));
+  const brands = sortBrands([...new Set([...VEHICLE_BRANDS, ...vehicles.map((vehicle) => vehicle.brand)])]);
   const bodyTypes = [...new Set(["Sedán", "SUV", "Pick-up", "Coupé", ...vehicles.map((vehicle) => vehicle.bodyType).filter((type) => type !== "A consultar")])].sort((a, b) => a.localeCompare(b, "es"));
   const alt = "";
   const { props: mobileImage } = getImageProps({
@@ -46,7 +46,7 @@ export default function Hero({ content, vehicles }: { content: HeroData; vehicle
           <div className="hero-search-footer">
             <nav className="hero-quick-search" aria-label="Búsquedas rápidas">
               <span>Búsquedas rápidas</span>
-              {["Audi", "BMW", "Mercedes-Benz"].map((brand) => <Link key={brand} href={{ pathname: "/vehiculos", query: { marca: brand } }}>{brand}</Link>)}
+              {["BMW", "Audi", "Mercedes-Benz"].map((brand) => <Link key={brand} href={{ pathname: "/vehiculos", query: { marca: brand } }}>{brand}</Link>)}
               <Link href="/vehiculos?carroceria=SUV">SUV</Link>
             </nav>
             <Link href={content.primaryCta.href} className="text-link hero-all-vehicles"><span>Ver todos<span className="hero-all-label"> los autos</span></span><Arrow /></Link>

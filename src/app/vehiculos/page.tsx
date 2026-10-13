@@ -5,16 +5,16 @@ import { getHomePageData } from "../actions";
 import { getVehicles } from "./actions";
 import CatalogHero from "./components/CatalogHero";
 import VehicleGrid from "./components/VehicleGrid";
+import { parseFilters } from "@/lib/vehicles/filters";
 
 export const metadata: Metadata = {
-  title: "Vehículos premium usados | RM Usados",
-  description: "Conocé el stock seleccionado de autos y SUV premium usados de RM Usados: Audi, Mercedes-Benz, BMW, Porsche y más.",
+  title: "Autos usados en Bahía Blanca",
+  description: "Stock de autos y SUV usados seleccionados en Bahía Blanca: BMW, Audi, Mercedes-Benz y más. Fotos, kilometraje y consulta directa por WhatsApp.",
   alternates: { canonical: "/vehiculos" },
   openGraph: {
-    title: "Vehículos premium usados | RM Usados",
+    title: "Autos usados en Bahía Blanca | RM Usados",
     description: "Una selección de autos y SUV de alta gama elegidos con criterio.",
-    type: "website",
-    locale: "es_AR",
+    url: "/vehiculos",
   },
 };
 
@@ -22,12 +22,7 @@ export default async function VehiclesPage({ searchParams }: PageProps<"/vehicul
   const params = await searchParams;
   const value = (key: string) => typeof params[key] === "string" ? params[key] as string : "";
   const [vehicles, homeData] = await Promise.all([getVehicles(), getHomePageData()]);
-  const initialFilters = {
-    query: value("q"),
-    brand: value("marca"),
-    bodyType: value("carroceria"),
-    sort: ["year", "mileage"].includes(value("orden")) ? value("orden") : "",
-  };
+  const initialFilters = parseFilters(value);
 
   return (
     <>

@@ -6,6 +6,13 @@ export const VEHICLE_BRANDS = [
   "Renault", "SEAT", "Škoda", "Smart", "Subaru", "Suzuki", "Tesla", "Toyota", "Volkswagen", "Volvo",
 ] as const;
 
+/** RM Usados revende principalmente BMW: siempre encabeza cualquier lista de marcas. */
+export const PRIORITY_BRAND = "BMW";
+
+export function sortBrands(brands: string[]) {
+  return [...brands].sort((a, b) => Number(b === PRIORITY_BRAND) - Number(a === PRIORITY_BRAND) || a.localeCompare(b, "es"));
+}
+
 const aliases: Record<string, string> = {
   mercedes: "Mercedes-Benz", "mercedes benz": "Mercedes-Benz", mercedesbenz: "Mercedes-Benz",
   citroen: "Citroën", mini: "MINI", bmw: "BMW", ram: "RAM", vw: "Volkswagen",

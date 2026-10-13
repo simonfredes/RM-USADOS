@@ -37,13 +37,14 @@ test("home: typography, visual hierarchy, screenshots and no overflow", async ({
   expect(await page.evaluate(() => [...document.fonts].some((font) => font.status === "loaded"))).toBe(true);
   const heroImage = page.locator(".hero-image");
   await expect.poll(() => heroImage.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
-  const imageBounds = await heroImage.boundingBox();
+  // The image itself scales during its entrance animation; its frame defines the full-bleed area.
+  const imageBounds = await page.locator(".hero-visual").boundingBox();
   expect(imageBounds!.x).toBe(0);
   expect(imageBounds!.width).toBe(page.viewportSize()!.width);
   await expect(page.getByRole("button", { name: "Buscar autos", exact: true })).toBeInViewport();
   if (page.viewportSize()!.width >= 1024) {
     const search = page.getByRole("search", { name: "Buscar vehículos" });
-    await expect(search.getByRole("button", { name: "Marca y carrocería", exact: true })).toBeHidden();
+    await expect(search.getByRole("button", { name: "Más filtros", exact: true })).toBeHidden();
     const controls = await search.locator("input, select, button[type=submit]").all();
     const positions = await Promise.all(controls.map(async (control) => (await control.boundingBox())!.y));
     expect(Math.max(...positions) - Math.min(...positions)).toBeLessThan(1);
@@ -62,7 +63,7 @@ test("hero search transfers combined filters and quick searches to the catalog",
   await page.goto("/");
   const search = page.getByRole("search", { name: "Buscar vehículos" });
   await search.getByRole("searchbox").fill("GLE");
-  const filtersToggle = search.getByRole("button", { name: "Marca y carrocería", exact: true });
+  const filtersToggle = search.getByRole("button", { name: "Más filtros", exact: true });
   if (await filtersToggle.isVisible()) {
     await expect(filtersToggle).toHaveAttribute("aria-expanded", "false");
     await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
@@ -143,7 +144,7 @@ test("empty catalog and recovery through contact", async ({ page }) => {
   const whatsapp = contact.getByRole("link", { name: "Coordiná una visita" });
   await expect(whatsapp).toHaveAttribute("href", /^https:\/\/wa\.me\//);
   await expect(whatsapp).toHaveAttribute("target", "_blank");
-  await expect(contact.getByRole("link", { name: /387/ })).toHaveAttribute("href", /^tel:/);
+  await expect(contact.getByRole("link", { name: /2914/ })).toHaveAttribute("href", /^tel:/);
   await expect(contact.getByRole("link", { name: "contacto@rmusados.com.ar" })).toHaveAttribute("href", /^mailto:/);
   await assertNoOverflow(page);
 });
@@ -197,6 +198,7 @@ test("@catalog published cards, long content, image fallbacks and screenshot", a
   await page.getByRole("heading", { name: "911 Carrera", exact: true }).scrollIntoViewIfNeeded();
   await expect(page.getByRole("img", { name: /Porsche 911 Carrera.*Imagen no disponible/ })).toBeVisible();
   await expect(page.getByText("USD 123.456.789")).toBeVisible();
+  await expect(page.getByRole("list", { name: "Destacados" }).first().getByRole("listitem")).toHaveText(["245 CV", "Única mano"]);
   await assertNoOverflow(page);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
   await expect(page.locator(".site-header")).not.toHaveClass(/is-scrolled/);
@@ -232,6 +234,50 @@ test("@catalog search, brand, sorting, URL persistence and empty-search recovery
   await expect(page).toHaveURL("/vehiculos");
 });
 
+test("@catalog budget, model, advanced filters, chips and price sorting", async ({ page, request }) => {
+  await stock(request);
+  await page.goto("/vehiculos?presupuesto=50000-80000");
+  await expect(page.locator(".vehicle-card")).toHaveCount(1);
+  await expect(page.locator(".vehicle-name")).toHaveText("A6");
+  await page.getByRole("combobox", { name: "Presupuesto (USD)" }).selectOption("120000-");
+  await expect(page.locator(".vehicle-card")).toHaveCount(2);
+  await page.getByRole("button", { name: "Limpiar filtros" }).click();
+  await page.getByRole("combobox", { name: "Marca", exact: true }).selectOption("Porsche");
+  await page.getByRole("combobox", { name: "Modelo" }).selectOption("911 Carrera");
+  await expect(page).toHaveURL(/modelo=911/);
+  await expect(page.locator(".vehicle-card")).toHaveCount(1);
+  await page.getByRole("combobox", { name: "Marca", exact: true }).selectOption("Audi");
+  await expect(page.getByRole("combobox", { name: "Modelo" })).toHaveValue("");
+  await page.getByRole("button", { name: "Limpiar filtros" }).click();
+  const more = page.getByRole("button", { name: /Más filtros/ });
+  await expect(more).toHaveAttribute("aria-expanded", "false");
+  await more.click();
+  await page.getByRole("combobox", { name: "Año desde" }).selectOption("2023");
+  await expect(page.locator(".vehicle-card")).toHaveCount(2);
+  await page.getByRole("button", { name: "Quitar filtro Desde 2023" }).click();
+  await page.getByRole("combobox", { name: "Kilometraje" }).selectOption("20000");
+  await expect(page.locator(".vehicle-card")).toHaveCount(2);
+  await page.reload();
+  await expect(page.getByRole("combobox", { name: "Kilometraje" })).toBeVisible();
+  await expect(page.locator(".vehicle-card")).toHaveCount(2);
+  await page.getByRole("button", { name: "Limpiar filtros" }).click();
+  await page.getByRole("combobox", { name: "Ordenar por" }).selectOption("price-asc");
+  await expect(page.locator(".vehicle-name").first()).toHaveText("A6");
+  await expect(page.locator(".vehicle-name").last()).toHaveText("Serie 8");
+  await assertNoOverflow(page);
+});
+
+test("@catalog BMW leads every brand list", async ({ page, request }) => {
+  await stock(request);
+  await page.goto("/");
+  const heroBrands = page.getByRole("search", { name: "Buscar vehículos" }).locator("select[name=marca] option"); // collapsed on mobile
+  await expect(heroBrands.nth(1)).toHaveText("BMW");
+  await expect(page.getByRole("navigation", { name: "Búsquedas rápidas" }).getByRole("link").first()).toHaveText("BMW");
+  await page.goto("/vehiculos");
+  const catalogBrands = await page.getByRole("combobox", { name: "Marca", exact: true }).locator("option").allTextContents();
+  expect(catalogBrands).toEqual(["Todas", "BMW", "Audi", "Mercedes-Benz", "Porsche"]);
+});
+
 test("@catalog selected vehicle arrives in the WhatsApp inquiry", async ({ page, request }) => {
   await stock(request);
   await page.goto("/vehiculos");
@@ -240,6 +286,49 @@ test("@catalog selected vehicle arrives in the WhatsApp inquiry", async ({ page,
   const href = await page.locator("#contacto").getByRole("link", { name: "Coordiná una visita" }).getAttribute("href");
   expect(new URL(href!).searchParams.get("text")).toContain("Audi A6 45 TFSI quattro");
   await assertNoOverflow(page);
+});
+
+test("@catalog vehicle detail: card link, gallery, SEO metadata, related and 404", async ({ page, request }) => {
+  await stock(request);
+  await page.goto("/vehiculos");
+  await page.getByRole("link", { name: "A6", exact: true }).click();
+  await expect(page).toHaveURL(/\/autos\/audi-a6-45-tfsi-2023$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Audi A6");
+  await expect(page).toHaveTitle("Audi A6 45 TFSI quattro · Unidad de prueba 2023 usado | RM Usados");
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/autos\/audi-a6-45-tfsi-2023$/);
+  const structured = await page.locator('script[type="application/ld+json"]').first().textContent();
+  const car = JSON.parse(structured!)[0];
+  expect(car["@type"]).toBe("Car");
+  expect(car.image).toHaveLength(3);
+  expect(car.mileageFromOdometer.value).toBe(18500);
+  expect(car.offers.price).toBe(68000);
+  const gallery = page.getByRole("region", { name: /Fotos del Audi A6/ });
+  await expect(gallery.locator(".gallery-main").getByText("1 / 3")).toBeVisible();
+  await gallery.locator(".gallery-main").getByRole("button", { name: "Foto siguiente" }).click();
+  await expect(gallery.locator(".gallery-main").getByText("2 / 3")).toBeVisible();
+  await gallery.getByRole("button", { name: "Ver foto 3 de 3" }).click();
+  await expect(gallery.getByRole("button", { name: "Ver foto 3 de 3" })).toHaveAttribute("aria-current", "true");
+  await gallery.getByRole("button", { name: "Ver fotos en pantalla completa" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toBeHidden();
+  const whatsapp = await page.getByRole("link", { name: "Consultar por WhatsApp" }).getAttribute("href");
+  expect(new URL(whatsapp!).searchParams.get("text")).toContain("/autos/audi-a6-45-tfsi-2023");
+  // Sedanes primero; entre ellos gana el Porsche por kilometraje similar. La SUV queda última.
+  const relatedRegion = page.getByRole("region", { name: "Vehículos similares." });
+  const related = relatedRegion.locator(".vehicle-card");
+  await expect(related.locator(".vehicle-name")).toHaveText(["911 Carrera", "Serie 8", /GLE 450/]);
+  await assertNoOverflow(page);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"]).analyze();
+  expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+  // Sin slug en la base, la unidad se publica por su id.
+  await relatedRegion.getByRole("link", { name: "Serie 8", exact: true }).click();
+  await expect(page).toHaveURL(/\/autos\/fixture-bmw$/);
+  expect((await request.get("/autos/no-existe")).status()).toBe(404);
+  const sitemap = await (await request.get("/sitemap.xml")).text();
+  expect(sitemap).toContain("/autos/audi-a6-45-tfsi-2023");
+  expect(sitemap).toContain("<image:loc>");
 });
 
 test("@catalog published home uses actual stock instead of reference cards", async ({ page, request }) => {
