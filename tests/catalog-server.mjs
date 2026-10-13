@@ -2,6 +2,7 @@
 import { createServer } from 'node:http';
 
 let mode = 'empty';
+let delay = 0;
 const base = { sitio: 'usados', estado: 'publicado', combustible: 'Nafta', transmision: 'Automática', carroceria: 'Sedán', color: 'Gris', moneda: 'USD' };
 const vehicles = [
   { ...base, id: 'fixture-audi', slug: 'audi-a6-45-tfsi-2023', marca: 'Audi', modelo: 'A6', version: '45 TFSI quattro · Unidad de prueba', anio: 2023, kilometraje: 18500, precio: 68000, descripcion: '245 CV · Única mano', ubicacion: 'Bahía Blanca, Buenos Aires', imagenes_vehiculo: [{ storage_path: 'sedan.png', orden: 0 }, { storage_path: 'suv-angle.png', orden: 1 }, { storage_path: 'suv-rear.png', orden: 2 }] },
@@ -14,7 +15,7 @@ createServer((req, res) => {
   const url = new URL(req.url, 'http://127.0.0.1:54329');
   res.setHeader('Content-Type', 'application/json');
   if (url.pathname === '/__fixtures') {
-    if (req.method === 'PUT') mode = url.searchParams.get('mode') || 'empty';
+    if (req.method === 'PUT') { mode = url.searchParams.get('mode') || 'empty'; delay = Number(url.searchParams.get('delay')) || 0; }
     res.end(JSON.stringify({ mode }));
     return;
   }
@@ -22,7 +23,7 @@ createServer((req, res) => {
     if (url.searchParams.get('sitio') !== 'eq.usados' || url.searchParams.get('estado') !== 'eq.publicado') {
       res.writeHead(400); res.end(JSON.stringify({ message: 'Missing public catalog filters' })); return;
     }
-    res.end(JSON.stringify(mode === 'stock' ? vehicles : []));
+    setTimeout(() => res.end(JSON.stringify(mode === 'stock' ? vehicles : [])), delay);
     return;
   }
   res.writeHead(404); res.end(JSON.stringify({ message: 'Fixture not found' }));

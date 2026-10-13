@@ -325,10 +325,23 @@ test("@catalog vehicle detail: card link, gallery, SEO metadata, related and 404
   // Sin slug en la base, la unidad se publica por su id.
   await relatedRegion.getByRole("link", { name: "Serie 8", exact: true }).click();
   await expect(page).toHaveURL(/\/autos\/fixture-bmw$/);
-  expect((await request.get("/autos/no-existe")).status()).toBe(404);
+  // Con loading.tsx la respuesta se transmite en streaming (status 200): Next marca la página como noindex.
+  const missing = await (await request.get("/autos/no-existe")).text();
+  expect(missing).toMatch(/<meta name="robots" content="noindex"/);
   const sitemap = await (await request.get("/sitemap.xml")).text();
   expect(sitemap).toContain("/autos/audi-a6-45-tfsi-2023");
   expect(sitemap).toContain("<image:loc>");
+});
+
+test("@catalog vehicle detail shows a skeleton while it loads", async ({ page, request }) => {
+  await stock(request);
+  await page.goto("/vehiculos");
+  await request.put("http://127.0.0.1:54329/__fixtures?mode=stock&delay=2500");
+  await page.getByRole("link", { name: "A6", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Cargando vehículo" })).toBeVisible();
+  await expect(page.locator(".site-header")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Audi A6", { timeout: 15_000 });
+  await expect(page.locator(".vehicle-skeleton")).toHaveCount(0);
 });
 
 test("@catalog published home uses actual stock instead of reference cards", async ({ page, request }) => {

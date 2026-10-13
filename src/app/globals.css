@@ -337,6 +337,26 @@ a:hover > .arrow, button:hover > .arrow { transform: translateX(2px); }
 .related { margin-top: 48px; background: var(--paper-deep); }
 .related .vehicle-grid { margin-top: 22px; }
 
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.vehicle-card:active { transform: scale(.99); transition-duration: .1s; }
+.vehicle-page-content { animation: page-in .45s var(--ease) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
+.skeleton { display: block; border-radius: 4px; background: linear-gradient(90deg, #eeeeee 0%, #f7f7f7 40%, #eeeeee 80%) 0 0 / 300% 100%; animation: skeleton-shimmer 1.4s linear infinite; }
+@keyframes skeleton-shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.vehicle-skeleton .gallery-thumb { opacity: 1; }
+.skeleton-breadcrumbs { display: flex; gap: 14px; align-items: center; min-height: 44px; }
+.skeleton-breadcrumbs .skeleton { width: 56px; height: 12px; }
+.skeleton-breadcrumbs .skeleton:last-child { width: 110px; }
+.skeleton-line { height: 12px; }
+.skeleton-title { width: 75%; height: 34px; margin-top: 10px; }
+.skeleton-price { width: 45%; height: 28px; margin-top: 8px; }
+.skeleton-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.skeleton-chips .skeleton { height: 26px; }
+.skeleton-button { height: 44px; }
+.skeleton-row { display: flex; justify-content: space-between; padding-block: 14px; border-bottom: 1px solid var(--line); }
+.skeleton-row .skeleton { width: 30%; height: 12px; }
+.skeleton-row .skeleton:last-child { width: 22%; }
+
 .catalog-empty { padding: 32px 20px; margin-top: 20px; border: 1px solid var(--line); border-radius: 5px; background: var(--paper-deep); text-align: center; }
 .catalog-empty .eyebrow { color: var(--muted); }
 .catalog-empty > .arrow { width: 24px; height: 24px; color: var(--accent); margin: 0 auto 16px; }
@@ -443,6 +463,7 @@ a:hover > .arrow, button:hover > .arrow { transform: translateX(2px); }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal-pending { opacity: 1; transform: none; }
   .vehicle-image, .vehicle-card, .budget-tile, .gallery-nav, .gallery-expand { transform: none !important; }
+  .skeleton { background: #eeeeee; }
   .reveal-wipe .vehicle-image { clip-path: none; }
   .marquee-toggle { display: none; }
 }

@@ -3,8 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getHomePageData } from "../../actions";
 import Arrow from "../../components/Arrow";
-import Footer from "../../components/Footer";
-import Navigation from "../../components/Navigation";
 import { getVehicleBySlug, getVehicles } from "../../vehiculos/actions";
 import VehicleCard from "../../vehiculos/components/VehicleCard";
 import VehicleGallery from "./VehicleGallery";
@@ -100,8 +98,7 @@ export default async function VehiclePage({ params }: PageProps<"/autos/[slug]">
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(structuredData)} />
-      <Navigation contact={contact} />
-      <main id="contenido" tabIndex={-1} className="vehicle-page">
+      <div className="vehicle-page-content">
         <div className="container">
           <nav aria-label="Ruta de navegación" className="breadcrumbs">
             <ol><li><Link href="/">Inicio</Link></li><li><Link href="/vehiculos">Vehículos</Link></li><li aria-current="page">{vehicle.brand} {vehicle.model}</li></ol>
@@ -143,8 +140,7 @@ export default async function VehiclePage({ params }: PageProps<"/autos/[slug]">
           <div className="vehicle-grid">{related.map((item) => <VehicleCard key={item.id} vehicle={item} />)}</div>
           <div className="selection-footer"><p>¿Buscás otra configuración?</p><Link href="/vehiculos" className="text-link">Ver todos los vehículos <Arrow /></Link></div>
         </div></section>}
-      </main>
-      <Footer contact={contact} />
+      </div>
     </>
   );
 }
