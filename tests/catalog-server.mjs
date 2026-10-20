@@ -19,11 +19,19 @@ createServer((req, res) => {
     res.end(JSON.stringify({ mode }));
     return;
   }
+  // Igual que la base real: anon no puede leer la tabla, solo la función del catálogo público.
   if (url.pathname === '/rest/v1/vehiculos') {
-    if (url.searchParams.get('sitio') !== 'eq.usados' || url.searchParams.get('estado') !== 'eq.publicado') {
-      res.writeHead(400); res.end(JSON.stringify({ message: 'Missing public catalog filters' })); return;
-    }
-    setTimeout(() => res.end(JSON.stringify(mode === 'stock' ? vehicles : [])), delay);
+    res.writeHead(401); res.end(JSON.stringify({ code: '42501', message: 'permission denied for table vehiculos' })); return;
+  }
+  if (url.pathname === '/rest/v1/rpc/catalogo_usados_publico') {
+    const rows = vehicles
+      .filter((vehicle) => vehicle.sitio === 'usados' && vehicle.estado === 'publicado')
+      .map((vehicle) => {
+        const row = { ...vehicle, imagenes: [...vehicle.imagenes_vehiculo].sort((a, b) => a.orden - b.orden).map((image) => image.storage_path) };
+        delete row.sitio; delete row.estado; delete row.imagenes_vehiculo;
+        return row;
+      });
+    setTimeout(() => res.end(JSON.stringify(mode === 'stock' ? rows : [])), delay);
     return;
   }
   res.writeHead(404); res.end(JSON.stringify({ message: 'Fixture not found' }));

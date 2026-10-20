@@ -7,7 +7,33 @@ export type { Vehicle };
 
 const integerFormatter = new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 });
 
-/** Devuelve exclusivamente el stock publicado del sitio de usados. Memoizado por request. */
+/** Fila de `catalogo_usados_publico()`: solo columnas públicas, sin dominio ni datos internos. */
+type CatalogRow = {
+  id: string;
+  slug: string | null;
+  marca: string;
+  modelo: string;
+  version: string | null;
+  anio: number;
+  kilometraje: number | null;
+  combustible: string | null;
+  transmision: string | null;
+  carroceria: string | null;
+  color: string | null;
+  motor: string | null;
+  precio: number | string | null;
+  moneda: string | null;
+  ubicacion: string | null;
+  descripcion: string | null;
+  actualizado_en: string | null;
+  imagenes: string[] | null;
+};
+
+/**
+ * Devuelve exclusivamente el stock publicado del sitio de usados. Memoizado por request.
+ * La base no permite leer `vehiculos` con la clave pública: la función SQL filtra los usados
+ * publicados, los ordena del más reciente al más antiguo y entrega sus imágenes en orden.
+ */
 export const getVehicles = cache(async (): Promise<Vehicle[]> => {
   if (!hasSupabaseEnv()) {
     console.error("No se pudo consultar el catálogo: faltan las variables públicas de Supabase.");
@@ -15,23 +41,17 @@ export const getVehicles = cache(async (): Promise<Vehicle[]> => {
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("vehiculos")
-    .select("id, slug, marca, modelo, version, anio, kilometraje, combustible, transmision, carroceria, color, motor, precio, moneda, ubicacion, descripcion, actualizado_en, imagenes_vehiculo(storage_path, orden)")
-    .eq("sitio", "usados")
-    .eq("estado", "publicado")
-    .order("creado_en", { ascending: false });
+  const { data, error } = await supabase.rpc("catalogo_usados_publico");
 
-  if (error || !data) {
+  if (error || !Array.isArray(data)) {
     console.error("No se pudo obtener el stock publicado", { code: error?.code, message: error?.message });
     return [];
   }
 
-  return data.map((vehicle) => {
-    const images = [...(vehicle.imagenes_vehiculo ?? [])]
-      .sort((a, b) => a.orden - b.orden)
-      .filter((image) => image.storage_path)
-      .map((image) => supabase.storage.from("vehicle-images").getPublicUrl(image.storage_path).data.publicUrl);
+  return (data as CatalogRow[]).map((vehicle) => {
+    const images = (vehicle.imagenes ?? [])
+      .filter(Boolean)
+      .map((path) => supabase.storage.from("vehicle-images").getPublicUrl(path).data.publicUrl);
 
     return {
       id: vehicle.id,
@@ -56,8 +76,8 @@ export const getVehicles = cache(async (): Promise<Vehicle[]> => {
       imageUrl: images[0] ?? null,
       images,
       location: vehicle.ubicacion ?? "Bahía Blanca, Buenos Aires",
-      // La descripción se carga como destacados separados por "·" (p. ej. "204 CV · Única mano").
-      highlights: (vehicle.descripcion ?? "").split("·").map((item: string) => item.trim()).filter(Boolean).slice(0, 6),
+      // Destacados separados por "·" ("204 CV · Única mano") o uno por renglón, como se cargan en el panel.
+      highlights: (vehicle.descripcion ?? "").split(/[·\r\n]+/).map((item) => item.trim()).filter(Boolean).slice(0, 6),
       updatedAt: vehicle.actualizado_en ?? null,
     };
   });

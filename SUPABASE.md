@@ -2,7 +2,7 @@
 
 Esta aplicación contiene únicamente la web pública. El panel administrativo y la autenticación pertenecen a otro proyecto.
 
-El catálogo consulta la base compartida de Rhein Motor mediante la clave pública de Supabase, sin sesiones ni credenciales administrativas. Solo muestra registros de `vehiculos` con `sitio = 'usados'` y `estado = 'publicado'`, junto con `imagenes_vehiculo` y el bucket `vehicle-images`. Las políticas RLS existentes controlan el acceso público.
+El catálogo consulta la base compartida de Rhein Motor mediante la clave pública de Supabase, sin sesiones ni credenciales administrativas. La clave pública no puede leer las tablas `vehiculos` ni `imagenes_vehiculo`. El sitio llama a la función `catalogo_usados_publico()`, que solo devuelve los usados publicados (`sitio = 'usados'`, `estado = 'publicado'`) con columnas públicas explícitas (sin dominio ni datos internos) y las rutas de sus imágenes en orden. Las imágenes se sirven por URL pública desde el bucket `vehicle-images`. La función se define en el proyecto de Rhein Motor (`db/rhein_motor_module_7_catalogo_publico_migration.sql`).
 
 La base ya está inicializada. **No ejecutes una segunda migración inicial.** `supabase/migrations/rhein_motor_initial_schema.sql` documenta el esquema compartido y se conserva como referencia.
 
