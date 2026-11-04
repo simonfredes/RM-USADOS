@@ -9,7 +9,13 @@ import Contact from "./components/Contact";
 import PremiumSelection from "./components/PremiumSelection";
 import PurchaseExperience from "./components/PurchaseExperience";
 import { getVehicles } from "./vehiculos/actions";
+import type { Metadata } from "next";
 import { BUSINESS_GEO, SITE_URL, absoluteUrl, jsonLd } from "@/lib/site";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+  openGraph: { url: "/" },
+};
 
 export default async function HomePage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
@@ -26,6 +32,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
     address: { "@type": "PostalAddress", streetAddress: pageData.contact.address, postalCode: "B8000", addressLocality: "Bahía Blanca", addressRegion: "Buenos Aires", addressCountry: "AR" },
     geo: { "@type": "GeoCoordinates", ...BUSINESS_GEO },
     hasMap: pageData.contact.mapsHref,
+    email: pageData.contact.email,
+    image: absoluteUrl("/images/RM%20Usados-3.JPEG"),
+    areaServed: { "@type": "City", name: "Bahía Blanca" },
+    openingHoursSpecification: [
+      { "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "09:00", closes: "18:00" },
+    ],
     brand: { "@type": "Brand", name: "BMW" },
   };
   return (

@@ -6,7 +6,7 @@ import Arrow from "../../components/Arrow";
 import { getVehicleBySlug, getVehicles } from "../../vehiculos/actions";
 import VehicleCard from "../../vehiculos/components/VehicleCard";
 import VehicleGallery from "./VehicleGallery";
-import { absoluteUrl, jsonLd } from "@/lib/site";
+import { absoluteUrl, jsonLd, DEFAULT_OG_IMAGE } from "@/lib/site";
 import { getRelatedVehicles, vehiclePath, vehicleTitle, type Vehicle } from "@/lib/vehicles/vehicle";
 
 const lower = (value: string) => value.toLocaleLowerCase("es");
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps<"/autos/[slug]">): 
   const title = `${vehicleTitle(vehicle)} ${vehicle.year} usado`;
   // ~160 caracteres: datos clave, destacados y llamado a la acción.
   const facts = [vehicle.mileageValue !== null && `con ${vehicle.mileage}`, vehicle.transmission !== "A consultar" && `transmisión ${lower(vehicle.transmission)}`].filter(Boolean).join(", ");
-  const description = [`${title}${facts ? ` ${facts}` : ""}.`, vehicle.highlights.length > 0 && `${vehicle.highlights.join(", ")}.`, `${vehicle.priceValue !== null ? `Precio: ${vehicle.price}` : "Consultá el precio"} en RM Usados, Bahía Blanca.`].filter(Boolean).join(" ");
+  const description = [`${title}${facts ? ` ${facts}` : ""}.`, vehicle.highlights.length > 0 && `${vehicle.highlights.join(", ").replace(/\.+$/, "")}.`, `${vehicle.priceValue !== null ? `Precio: ${vehicle.price}` : "Consultá el precio"} en RM Usados, Bahía Blanca.`].filter(Boolean).join(" ");
   const path = vehiclePath(vehicle);
   return {
     title,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps<"/autos/[slug]">): 
       title: `${title} | RM Usados`,
       description,
       url: path,
-      images: vehicle.images.slice(0, 4).map((url, i) => ({ url, alt: `${title}, foto ${i + 1}` })),
+      images: vehicle.images.length > 0 ? vehicle.images.slice(0, 4).map((url, i) => ({ url, alt: `${title}, foto ${i + 1}` })) : [DEFAULT_OG_IMAGE],
     },
   };
 }
